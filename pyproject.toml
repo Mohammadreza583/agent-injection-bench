@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-injection-bench"
+version = "0.1.0"
+description = "v0 indirect prompt-injection benchmark for tool-using agents (attack + evaluation only)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "agent-injection-bench contributors" }]
+dependencies = [
+  "jsonschema>=4.20",
+  "python-dotenv>=1.0",
+  "openai>=1.40",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "jsonschema>=4.20",
+]
+
+[tool.setuptools.packages.find]
+include = ["agent*", "tools*", "scripts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

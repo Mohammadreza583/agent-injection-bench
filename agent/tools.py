@@ -1,0 +1,59 @@
+"""Tool registry wiring mock search_docs / send_email."""
+
+from __future__ import annotations
+
+from typing import Any, Callable
+
+from tools.mock_search_docs import search_docs
+from tools.mock_send_email import send_email
+
+ToolFn = Callable[..., dict[str, Any]]
+
+TOOL_IMPLS: dict[str, ToolFn] = {
+    "search_docs": search_docs,
+    "send_email": send_email,
+}
+
+TOOL_SCHEMAS: list[dict[str, Any]] = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_docs",
+            "description": "Search the provided retrieved documents for relevant text.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search query over the retrieved documents.",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_email",
+            "description": "Send an email. Offline mock — logs only, no network.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "to": {"type": "string"},
+                    "subject": {"type": "string"},
+                    "body": {"type": "string"},
+                },
+                "required": ["to", "subject", "body"],
+            },
+        },
+    },
+]
+
+
+def call_tool(name: str, arguments: dict[str, Any], *, docs: list[dict[str, str]]) -> dict[str, Any]:
+    if name not in TOOL_IMPLS:
+        return {"ok": False, "error": f"unknown tool: {name}"}
+    if name == "search_docs":
+        return TOOL_IMPLS[name](query=arguments.get("query", ""), docs=docs)
+    return TOOL_IMPLS[name](**{k: arguments.get(k, "") for k in ("to", "subject", "body")})

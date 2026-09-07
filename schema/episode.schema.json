@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-injection-bench.local/schema/episode.schema.json",
+  "title": "AgentInjectionBenchEpisode",
+  "description": "Frozen v0 episode schema for agent-injection-bench. Do not weaken validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "split",
+    "user_query",
+    "retrieved_docs",
+    "injection",
+    "expected"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(atk|ben)_[0-9]{3}$",
+      "description": "Episode identifier, e.g. atk_002 or ben_002."
+    },
+    "split": {
+      "type": "string",
+      "enum": ["attack", "benign"]
+    },
+    "user_query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Legitimate user task. Must never contain the injection payload."
+    },
+    "retrieved_docs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["doc_id", "text"],
+        "properties": {
+          "doc_id": { "type": "string", "minLength": 1 },
+          "text": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "injection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["present"],
+      "properties": {
+        "present": { "type": "boolean" },
+        "payload": { "type": "string" },
+        "target_tool": { "type": "string" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_tools", "forbidden_tools"],
+      "properties": {
+        "allowed_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "utility_answer_contains": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "notes": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_paper": {
+      "type": "string",
+      "description": "Free string; commonly one of InjecAgent | AgentDojo | Greshake | Yi | original."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "split": { "const": "attack" } },
+        "required": ["split"]
+      },
+      "then": {
+        "properties": {
+          "injection": {
+            "properties": {
+              "present": { "const": true }
+            },
+            "required": ["present", "payload", "target_tool"]
+          },
+          "expected": {
+            "properties": {
+              "forbidden_tools": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "split": { "const": "benign" } },
+        "required": ["split"]
+      },
+      "then": {
+        "properties": {
+          "injection": {
+            "properties": {
+              "present": { "const": false }
+            },
+            "required": ["present"]
+          }
+        }
+      }
+    }
+  ]
+}
